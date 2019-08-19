@@ -51,9 +51,15 @@ if args.clear:
   sys.exit(0)
 
 ## allow SSHD port - just to be sure
-portfind_cmd="netstat -plnt | grep sshd | grep -v tcp6 | awk '{print $4}' | awk -F: '{print $2}'"
-sshd_port=int(os.popen(portfind_cmd).read())
-add_pass_rule(str(sshd_port), 'tcp', 'ogniochron_sshd_safeguard')
+portfind_cmd="/usr/bin/netstat -plnt"
+netstat=os.popen(portfind_cmd)
+sshd_port='22'
+for line in netstat:
+  if 'sshd' in line and 'tcp6' not in line:
+    fields=line.split()
+    sshd_port=fields[3].split(':')[1]
+    break
+add_pass_rule(sshd_port, 'tcp', 'ogniochron_sshd_safeguard')
 
 ## allow INPUT for established connections
 rule = iptc.Rule()
@@ -112,6 +118,6 @@ chain_filter.append_rule(rule)
 if args.debug:
   print()
   print('Table FILTER')
-  print(os.popen('iptables -t filter -S').read())
+  print(os.popen('/usr/sbin/iptables -t filter -S').read())
   print('Table NAT')
-  print(os.popen('iptables -t nat -S').read())
+  print(os.popen('/usr/sbin/iptables -t nat -S').read())
