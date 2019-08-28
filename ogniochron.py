@@ -62,16 +62,17 @@ for line in netstat:
 add_pass_rule(sshd_port, 'tcp', 'ogniochron_sshd_safeguard')
 
 ## allow INPUT for established connections
-rule = iptc.Rule()
-rule.protocol         = 'tcp'
-rule.target           = iptc.Target(rule, 'ACCEPT')
-match                 = iptc.Match(rule, 'state')
-match.state           = 'RELATED,ESTABLISHED'
-match_comment         = rule.create_match('comment')
-match_comment.comment = 'ogniochron_input_related_established'
-rule.add_match(match)
-rule.add_match(match_comment)
-chain_filter.insert_rule(rule)
+for proto in ['tcp', 'udp']:
+  rule = iptc.Rule()
+  rule.protocol         = proto
+  rule.target           = iptc.Target(rule, 'ACCEPT')
+  match                 = iptc.Match(rule, 'state')
+  match.state           = 'RELATED,ESTABLISHED'
+  match_comment         = rule.create_match('comment')
+  match_comment.comment = 'ogniochron_input_related_established_'+proto
+  rule.add_match(match)
+  rule.add_match(match_comment)
+  chain_filter.insert_rule(rule)
 
 ## parse PASS rules
 with open(args.pas[0], newline='') as config_file:
@@ -106,13 +107,14 @@ with open(args.nat[0], newline='') as config_file:
 
 ## finally drop rest of traffic
 print('Inserting new DROP rule: ogniochron_drop [everything!]')
-rule                  = iptc.Rule()
-rule.protocol         = 'tcp'
-rule.target           = iptc.Target(rule, 'DROP')
-match_comment         = rule.create_match('comment')
-match_comment.comment = 'ogniochron_drop'
-rule.add_match(match_comment)
-chain_filter.append_rule(rule)
+for proto in ['tcp', 'udp']:
+  rule                  = iptc.Rule()
+  rule.protocol         = proto
+  rule.target           = iptc.Target(rule, 'DROP')
+  match_comment         = rule.create_match('comment')
+  match_comment.comment = 'ogniochron_drop_'+proto
+  rule.add_match(match_comment)
+  chain_filter.append_rule(rule)
 
 ## Summary
 if args.debug:
