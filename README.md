@@ -9,17 +9,19 @@ very simple iptables configurator with two "tables" in csv files:
 ## usage
 
 ```
-usage: ogniochron.py [-h] -nat nat_file -pas pass_file [-debug] [-clear]
+usage: ogniochron.py [-h] -nat nat_file -pas pass_file -o public_iface
+                     [-debug] [-clear]
 
 Ogniochron - very simple iptables configurator
 
 optional arguments:
-  -h, --help      show this help message and exit
-  -nat nat_file   csv file for NAT rules
-  -pas pass_file  csv file for PASS rules
+  -h, --help       show this help message and exit
+  -nat nat_file    csv file for NAT rules
+  -pas pass_file   csv file for PASS rules
+  -o public_iface  interface facing internet
   -debug
-  -clear          stop after removing old rules
-```
+  -clear           stop after removing old rules
+``` 
 
 ### example NAT file
 
@@ -40,7 +42,7 @@ proxmox,8006,tcp
 ### example run
 
 ```
-# ./ogniochron.py -nat /etc/ogniochron_nat.csv -pas /etc/ogniochron_pass.csv -debug
+# ./ogniochron.py -nat /etc/ogniochron_nat.csv -pas /etc/ogniochron_pass.csv -debug -o ens30
 Dropping old rule:       ogniochron_test
 Dropping old rule:       ogniochron_workstation_ssh
 Dropping old rule:       ogniochron_natpass_workstation_ssh

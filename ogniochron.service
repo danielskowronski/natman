@@ -4,7 +4,7 @@ Documentation=https://github.com/danielskowronski/ogniochron
 
 [Service]
 Type=oneshot
-ExecStart=/opt/ogniochron/ogniochron.py -nat /etc/ogniochron_nat.csv -pas /etc/ogniochron_pass.csv
+ExecStart=/opt/ogniochron/ogniochron.py -nat /etc/ogniochron_nat.csv -pas /etc/ogniochron_pass.csv -o ens3o
 
 [Install]
 WantedBy=multi-user.target
