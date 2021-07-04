@@ -103,20 +103,6 @@ with open(args.nat[0], newline='') as config_file:
 
         add_pass_rule(line[1],proto,'ogniochron_natpass_'+proto+'_'+line[0], True)
 
-## allow INPUT for established connections
-for proto in ['tcp', 'udp']:
-  rule = iptc.Rule()
-  rule.protocol         = proto
-  rule.target           = iptc.Target(rule, 'ACCEPT')
-  match                 = iptc.Match(rule, 'state')
-  match.state           = 'RELATED,ESTABLISHED'
-  match_comment         = rule.create_match('comment')
-  match_comment.comment = 'ogniochron_input_related_established_'+proto
-  rule.add_match(match)
-  rule.add_match(match_comment)
-  chain_filter.insert_rule(rule)
-  chain_nat.insert_rule(rule)
-
 ## finally drop rest of traffic
 print('Inserting new DROP rule: ogniochron_drop [everything!]')
 for proto in ['tcp', 'udp']:
