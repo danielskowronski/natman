@@ -1,4 +1,7 @@
 #!/usr/bin/python3
+import os
+os.environ["XTABLES_LIBDIR"] = "/usr/lib/x86_64-linux-gnu/xtables"
+
 import iptc,argparse,csv,re,os,time,sys
 
 def add_pass_rule(port, proto='tcp', comment='', forward=False):
