@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 import os
 os.environ["XTABLES_LIBDIR"] = "/usr/lib/x86_64-linux-gnu/xtables"
-
 import iptc,argparse,csv,re,os,time,sys
 
 def add_pass_rule(port, proto='tcp', comment='', forward=False):
@@ -85,26 +84,24 @@ with open(args.nat[0], newline='') as config_file:
       continue
 
     for proto in ['tcp','udp']:
-        print('Inserting new NAT  rule: ogniochron_'+proto+'_'+line[0]+' [ext port: '+line[1]+' to: '+line[2]+':'+line[3]+']')
+        print('Inserting new NAT  rule: ogniochron_'+proto+'_'+line[0]+' [ext '+line[1]+':'+line[2]+' to: '+line[3]+':'+line[4]+']')
 
         rule                  = iptc.Rule()
         rule.protocol         = proto
         rule.in_interface     = args.o[0]
+        rule.dst              = line[1]
         match_comment         = rule.create_match('comment')
         match_comment.comment = 'ogniochron_'+proto+'_'+line[0]
         match                 = iptc.Match(rule,proto)
-        match.dport           = line[1]
-        match_state           = iptc.Match(rule, 'state')
-        match_state.state     = 'NEW'
+        match.dport           = line[2]
         target                = rule.create_target('DNAT')
-        target.to_destination = line[2]+':'+line[3]
+        target.to_destination = line[3]+':'+line[4]
         rule.target = target
         rule.add_match(match)
-        rule.add_match(match_state)
         rule.add_match(match_comment)
         chain_nat.insert_rule(rule)
 
-        add_pass_rule(line[1],proto,'ogniochron_natpass_'+proto+'_'+line[0], True)
+        add_pass_rule(line[2],proto,'ogniochron_natpass_'+proto+'_'+line[0], True)
 
 ## allow INPUT for established connections
 for proto in ['tcp', 'udp']:
@@ -138,3 +135,4 @@ if args.debug:
   print(os.popen('/usr/sbin/iptables -t filter -S').read())
   print('Table NAT')
   print(os.popen('/usr/sbin/iptables -t nat -S').read())
+

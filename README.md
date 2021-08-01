@@ -27,8 +27,9 @@ optional arguments:
 
 ```
 #lines starting with # are comments
-#name,src_port,dest_ip,dest_port
-glyptodon,8080,10.201.0.3,8080
+#name,src_ip,src_port,dest_ip,dest_port
+ipsec,1.2.3.4,500,10.1.2.3,500
+ipsec,1.2.3.4,4500,10.1.2.3,4500
 ```
 
 ### example PASS file
@@ -52,9 +53,9 @@ Dropping old rule:       ogniochron_input_related_established
 Dropping old rule:       ogniochron_drop
 Inserting new PASS rule: ogniochron_sshd_safeguard [tcp/22]
 Inserting new PASS rule: ogniochron_proxmox [tcp/8006]
-Inserting new NAT  rule: ogniochron_glyptodon [ext port: 8080 to: 10.201.0.3:8080]
+Inserting new NAT  rule: ogniochron_glyptodon [ext: 1.2.3.4:8080 to: 10.201.0.3:8080]
 Inserting new PASS rule: ogniochron_natpass_glyptodon [tcp/8080]
-Inserting new NAT  rule: ogniochron_workstation_ssh [ext port: 22001 to: 10.201.0.2:22]
+Inserting new NAT  rule: ogniochron_workstation_ssh [ext: 1.2.3.4:22001 to: 10.201.0.2:22]
 Inserting new PASS rule: ogniochron_natpass_workstation_ssh [tcp/22001]
 Inserting new DROP rule: ogniochron_drop [everything!]
 
