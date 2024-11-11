@@ -27,17 +27,22 @@ optional arguments:
 
 ```
 #lines starting with # are comments
-#name,src_ip,src_port,dest_ip,dest_port
-ipsec,1.2.3.4,500,10.1.2.3,500
-ipsec,1.2.3.4,4500,10.1.2.3,4500
+#name,src_ip,src_port,dest_ip,dest_port,src_net
+ipsec,1.2.3.4,500,10.1.2.3,500,
+ipsec,1.2.3.4,4500,10.1.2.3,4500,
 ```
 
 ### example PASS file
 
 ```
-#name,external_port,proto(tcp/udp)
-proxmox,8006,tcp
+#name,external_port,proto(tcp/udp),src_net
+proxmox,8006,tcp,127.0.0.1
 ```
+
+### `src_net` field
+
+- single CIDR
+- empty means `0.0.0.0/0`
 
 
 ### example run

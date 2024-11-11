@@ -3,10 +3,11 @@ import os
 os.environ["XTABLES_LIBDIR"] = "/usr/lib/x86_64-linux-gnu/xtables"
 import iptc,argparse,csv,re,os,time,sys
 
-def add_pass_rule(port, proto='tcp', comment='', forward=False):
+def add_pass_rule(port, proto='tcp', src_net='0.0.0.0/0', comment='', forward=False):
   print('Inserting new PASS rule: '+comment+' ['+proto+'/'+str(port)+']')
   rule                  = iptc.Rule()
   rule.protocol         = proto
+  rule.src              = '0.0.0.0/0' if src_net.strip() == '' else src_net.strip()
   rule.target           = iptc.Target(rule, 'ACCEPT')
   match_comment         = rule.create_match('comment')
   match_comment.comment = comment
@@ -21,11 +22,12 @@ def add_pass_rule(port, proto='tcp', comment='', forward=False):
 
 ## argparse
 parser = argparse.ArgumentParser(description='Ogniochron - very simple iptables configurator')
-parser.add_argument('-nat',   metavar='nat_file',     nargs=1, help='csv file for NAT rules',    required=True)
-parser.add_argument('-pas',   metavar='pass_file',    nargs=1, help='csv file for PASS rules',   required=True)
-parser.add_argument('-o',     metavar='public_iface', nargs=1, help='interface facing internet', required=True)
-parser.add_argument('-debug', action='store_true')
-parser.add_argument('-clear', action='store_true', help='stop after removing old rules')
+parser.add_argument('-nat',      metavar='nat_file',     nargs=1, help='csv file for NAT rules',    required=True)
+parser.add_argument('-pas',      metavar='pass_file',    nargs=1, help='csv file for PASS rules',   required=True)
+parser.add_argument('-o',        metavar='public_iface', nargs=1, help='interface facing internet', required=True)
+parser.add_argument('-debug',    action='store_true')
+parser.add_argument('-clear',    action='store_true', help='stop after removing old rules')
+parser.add_argument('-nocommit', action='store_true', help='do not commit changes to firewall')
 args = parser.parse_args()
 
 ## globals
@@ -49,10 +51,11 @@ for chain in chain_nat,chain_filter,chain_output,chain_forward:
         chain.delete_rule(rule)
         break
 
-table_nat.commit()
-table_filter.commit()
-table_nat.autocommit    = True
-table_filter.autocommit = True
+if not args.nocommit:
+  table_nat.commit()
+  table_filter.commit()
+  table_nat.autocommit    = True
+  table_filter.autocommit = True
 
 if args.clear:
   sys.exit(0)
@@ -66,7 +69,7 @@ for line in netstat:
     fields=line.split()
     sshd_port=fields[3].split(':')[1]
     break
-add_pass_rule(sshd_port, 'tcp', 'ogniochron_sshd_safeguard')
+add_pass_rule(sshd_port, 'tcp', '0.0.0.0/0', 'ogniochron_sshd_safeguard')
 
 ## parse PASS rules
 with open(args.pas[0], newline='') as config_file:
@@ -74,7 +77,7 @@ with open(args.pas[0], newline='') as config_file:
   for line in config_reader:
     if len(line)==0 or line[0][0]=='#':
       continue
-    add_pass_rule(line[1],line[2],'ogniochron_'+line[0])
+    add_pass_rule(line[1],line[2],line[3],'ogniochron_'+line[0])
 
 ## parse NAT rules
 with open(args.nat[0], newline='') as config_file:
@@ -101,7 +104,7 @@ with open(args.nat[0], newline='') as config_file:
         rule.add_match(match_comment)
         chain_nat.insert_rule(rule)
 
-        add_pass_rule(line[2],proto,'ogniochron_natpass_'+proto+'_'+line[0], True)
+        add_pass_rule(line[2],proto,line[5],'ogniochron_natpass_'+proto+'_'+line[0], True)
 
 ## allow INPUT for established connections
 for proto in ['tcp', 'udp']:
@@ -135,4 +138,3 @@ if args.debug:
   print(os.popen('/usr/sbin/iptables -t filter -S').read())
   print('Table NAT')
   print(os.popen('/usr/sbin/iptables -t nat -S').read())
-
